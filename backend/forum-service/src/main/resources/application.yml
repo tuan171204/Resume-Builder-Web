@@ -1,0 +1,15 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: forum-service
+  data:
+    mongodb:
+      host: mongodb
+      port: 27017
+      database: forum_db
+
+logging:
+  level:
+    org.springframework.data.mongodb: INFO

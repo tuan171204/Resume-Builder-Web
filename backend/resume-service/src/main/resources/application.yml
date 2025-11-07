@@ -1,0 +1,15 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: resume-service
+  data:
+    mongodb:
+      host: mongodb
+      port: 27017
+      database: resume_db
+
+logging:
+  level:
+    org.springframework.data.mongodb: INFO
