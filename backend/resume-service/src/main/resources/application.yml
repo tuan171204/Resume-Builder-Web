@@ -6,9 +6,12 @@ spring:
     name: resume-service
   data:
     mongodb:
-      host: mongodb
-      port: 27017
-      database: resume_db
+      uri: mongodb://mongo:27017/resumedb
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 
 logging:
   level:

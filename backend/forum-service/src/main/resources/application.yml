@@ -6,9 +6,12 @@ spring:
     name: forum-service
   data:
     mongodb:
-      host: mongodb
-      port: 27017
-      database: forum_db
+      uri: mongodb://mongo:27017/forumdb
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 
 logging:
   level:
