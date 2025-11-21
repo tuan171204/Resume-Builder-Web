@@ -6,13 +6,23 @@ spring:
     name: resume-service
   data:
     mongodb:
-      uri: mongodb://mongo:27017/resumedb
+      uri: mongodb://localhost:27017/resumedb
+      database: resumedb
 
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 
+# Cấu hình OpenRouter
+openrouter:
+  api-url: https://openrouter.ai/api/v1/chat/completions
+  # Key của bạn (đã điền sẵn)
+  api-key: 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
+  # Model miễn phí bạn chọn
+  model: google/gemini-2.0-flash-exp:free
+
 logging:
   level:
-    org.springframework.data.mongodb: INFO
+    root: INFO
+    com.example.resume_service: DEBUG
