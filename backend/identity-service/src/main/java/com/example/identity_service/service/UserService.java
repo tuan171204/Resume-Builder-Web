@@ -26,12 +26,14 @@ import java.util.List;
 public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
-    PasswordEncoder passwordEncoder;
 
     public UserResponse createUser(UserCreationRequest request){
+        if (userRepository.existsByUsername(request.getUsername()))
+            throw new RuntimeException("User existed");
 
         User user = userMapper.toUser(request);
-        
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         try {
@@ -59,6 +61,7 @@ public class UserService {
 
         userMapper.updateUser(user, request);
 
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         return userMapper.toUserResponse(userRepository.save(user));
