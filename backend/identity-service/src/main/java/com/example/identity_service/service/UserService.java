@@ -29,7 +29,7 @@ public class UserService {
 
     public UserResponse createUser(UserCreationRequest request){
         if (userRepository.existsByUsername(request.getUsername()))
-            throw new RuntimeException("User existed");
+            throw new RuntimeException("Username existed");
 
         User user = userMapper.toUser(request);
 
