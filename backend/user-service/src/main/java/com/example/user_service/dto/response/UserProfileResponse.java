@@ -11,10 +11,17 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserProfileResponse {
-    private String id;
-    private String firstName;
-    private String lastName;
-    private String phoneNumber;
-
+    String id;
+    String userId;
+    String firstName;
+    String lastName;
+    String phoneNumber;
+    String email;
+    LocalDate dob;
+    Boolean isActive;
+    LocalDate createdAt;
+    LocalDate updatedAt;
+    SubscriptionPlan subscriptionPlan;
 }

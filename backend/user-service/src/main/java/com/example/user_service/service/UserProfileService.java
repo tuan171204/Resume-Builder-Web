@@ -12,15 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class UserProfileService {
-    private final UserProfileRepository userProfileRepository;
-    private final UserMapper userMapper;
-
-    public UserProfileService(UserProfileRepository userProfileRepository, UserMapper userMapper) {
-        this.userProfileRepository = userProfileRepository;
-        this.userMapper = userMapper;
-    }
+    UserProfileRepository userProfileRepository;
+    UserMapper userMapper;
 
     public UserProfileResponse createUserProfile(UserCreationRequest request){
         UserProfile userProfile = userMapper.toUserProfile(request);
@@ -30,7 +27,7 @@ public class UserProfileService {
     }
 
     public UserProfileResponse getUserProfile(String id){
-        UserProfile userProfile = userProfileRepository.findById(id)
+        UserProfile userProfile = userProfileRepository.findByUserId(id)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
 
         return userMapper.toUserProfileResponse(userProfile);
