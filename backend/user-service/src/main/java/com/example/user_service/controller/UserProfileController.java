@@ -3,15 +3,16 @@ package com.example.user_service.controller;
 import com.example.user_service.dto.request.UserCreationRequest;
 import com.example.user_service.dto.response.UserProfileResponse;
 import com.example.user_service.service.UserProfileService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileController {
-    private final UserProfileService userProfileService;
-
-    public UserProfileController(UserProfileService userProfileService) {
-        this.userProfileService = userProfileService;
-    }
+    UserProfileService userProfileService;
 
     @PostMapping("/users")
     UserProfileResponse createUser(@RequestBody UserCreationRequest request){
