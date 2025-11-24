@@ -7,6 +7,8 @@ import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Alert, AlertDescription } from '../ui/alert';
+import { registerUser } from '../../services/authenticationService'; // <-- IMPORT registerUser
+import { toast } from 'sonner'; // <-- IMPORT toast
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'user' | 'recruiter'>('user');
   const [showAISuggestion, setShowAISuggestion] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleUsernameChange = (value: string) => {
     setUsername(value);
@@ -26,13 +29,34 @@ export function RegisterPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
     if (password !== confirmPassword) {
-      alert('Mật khẩu không khớp');
+      toast.error('Mật khẩu xác nhận không khớp.');
+      setIsLoading(false);
       return;
     }
-    navigate('/login');
+
+    try {
+      // Gửi request đăng ký
+      console.log(email)
+      await registerUser(username, password, email);
+
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      navigate('/login');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Đã xảy ra lỗi không xác định.";
+
+      if (error.response?.status === 400) {
+        toast.error(`Đăng ký thất bại: ${errorMessage}`);
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -70,7 +94,7 @@ export function RegisterPage() {
                     required
                   />
                 </div>
-                
+
                 {/* AI Username Suggestion */}
                 {showAISuggestion && (
                   <Alert className="bg-gradient-to-r from-[#6366F1]/10 to-[#8B5CF6]/10 border-[#6366F1]/30">
@@ -153,8 +177,12 @@ export function RegisterPage() {
               </div>
 
               {/* Submit Button */}
-              <Button type="submit" className="w-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:opacity-90">
-                Tạo tài khoản
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:opacity-90"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Đang đăng ký...' : 'Tạo tài khoản'}
               </Button>
 
               {/* Divider */}

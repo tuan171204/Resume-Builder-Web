@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.44.0.v20251118-1623, environment: Java 21.0.9 (Eclipse Adoptium)"
+    comments = "version: 1.6.3, compiler: javac, environment: Java 22.0.2 (Oracle Corporation)"
 )
 @Component
 public class ProfileMapperImpl implements ProfileMapper {
@@ -20,11 +20,11 @@ public class ProfileMapperImpl implements ProfileMapper {
 
         ProfileCreationRequest.ProfileCreationRequestBuilder profileCreationRequest = ProfileCreationRequest.builder();
 
-        profileCreationRequest.dob( request.getDob() );
-        profileCreationRequest.email( request.getEmail() );
         profileCreationRequest.firstName( request.getFirstName() );
         profileCreationRequest.lastName( request.getLastName() );
         profileCreationRequest.phoneNumber( request.getPhoneNumber() );
+        profileCreationRequest.email( request.getEmail() );
+        profileCreationRequest.dob( request.getDob() );
 
         return profileCreationRequest.build();
     }

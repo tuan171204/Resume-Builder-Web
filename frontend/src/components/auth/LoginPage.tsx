@@ -1,10 +1,24 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileText, Mail, Lock, Chrome } from 'lucide-react';
+import { FileText, Mail, Lock, User, Chrome } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { logIn } from '../../services/authenticationService';
+import { getMyInfo } from '../../services/userService';
+import { toast } from 'sonner';
+
+interface UserResponse {
+  id: string;
+  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  email: string;
+  dob: string | null;
+  isActive: boolean;
+}
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -12,14 +26,60 @@ interface LoginPageProps {
 
 export function LoginPage({ onLogin }: LoginPageProps) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const checkAndRedirect = async () => {
+    try {
+      const response = await getMyInfo();
+      const user: UserResponse = response.data.result;
+
+      // Danh sách các trường bắt buộc phải có giá trị
+      const requiredFields = [user.firstName, user.lastName, user.phoneNumber, user.dob];
+
+      const isProfileIncomplete = requiredFields.some(field => field === null || field === '');
+
+      if (isProfileIncomplete) {
+        // Chuyển hướng đến trang cập nhật hồ sơ bắt buộc
+        toast.info("Vui lòng hoàn thiện thông tin hồ sơ của bạn.");
+        navigate('/profile', { state: { mandatory: true, user } });
+      } else {
+        navigate('/dashboard');
+      }
+
+    } catch (error) {
+      toast.error("Không thể tải thông tin người dùng. Vui lòng thử lại.");
+      navigate('/login');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
-    // Redirect to dashboard after login
-    navigate('/dashboard');
+    setIsLoading(true);
+
+    try {
+      const response = await logIn(username, password);
+
+      if (response.data?.result?.token) {
+        toast.success("Đăng nhập thành công!");
+        onLogin();
+        await checkAndRedirect();
+
+      } else {
+        toast.error("Đăng nhập thất bại. Token rỗng.");
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Đã xảy ra lỗi không xác định.";
+
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Sai email hoặc mật khẩu.");
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,15 +104,15 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Username</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
                     id="email"
-                    type="email"
-                    placeholder="nguyen.van.a@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    placeholder="Nhập username ... "
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -67,7 +127,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Nhập mật khẩu ... "
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -84,8 +144,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               </div>
 
               {/* Submit Button */}
-              <Button type="submit" className="w-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:opacity-90">
-                Đăng nhập
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:opacity-90"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </Button>
 
               {/* Divider */}

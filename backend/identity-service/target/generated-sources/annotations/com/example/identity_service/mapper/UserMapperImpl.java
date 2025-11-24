@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.44.0.v20251118-1623, environment: Java 21.0.9 (Eclipse Adoptium)"
+    comments = "version: 1.6.3, compiler: javac, environment: Java 22.0.2 (Oracle Corporation)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -22,13 +22,13 @@ public class UserMapperImpl implements UserMapper {
 
         User user = new User();
 
-        user.setDob( request.getDob() );
-        user.setEmail( request.getEmail() );
+        user.setUsername( request.getUsername() );
+        user.setPassword( request.getPassword() );
         user.setFirstName( request.getFirstName() );
         user.setLastName( request.getLastName() );
-        user.setPassword( request.getPassword() );
         user.setPhoneNumber( request.getPhoneNumber() );
-        user.setUsername( request.getUsername() );
+        user.setEmail( request.getEmail() );
+        user.setDob( request.getDob() );
 
         return user;
     }
@@ -41,16 +41,16 @@ public class UserMapperImpl implements UserMapper {
 
         UserResponse.UserResponseBuilder userResponse = UserResponse.builder();
 
-        userResponse.createdAt( user.getCreatedAt() );
-        userResponse.dob( user.getDob() );
-        userResponse.email( user.getEmail() );
-        userResponse.firstName( user.getFirstName() );
         userResponse.id( user.getId() );
-        userResponse.isActive( user.getIsActive() );
+        userResponse.username( user.getUsername() );
+        userResponse.firstName( user.getFirstName() );
         userResponse.lastName( user.getLastName() );
         userResponse.phoneNumber( user.getPhoneNumber() );
+        userResponse.email( user.getEmail() );
+        userResponse.dob( user.getDob() );
+        userResponse.createdAt( user.getCreatedAt() );
         userResponse.updatedAt( user.getUpdatedAt() );
-        userResponse.username( user.getUsername() );
+        userResponse.isActive( user.getIsActive() );
 
         return userResponse.build();
     }
@@ -61,12 +61,26 @@ public class UserMapperImpl implements UserMapper {
             return;
         }
 
-        user.setDob( request.getDob() );
-        user.setEmail( request.getEmail() );
-        user.setFirstName( request.getFirstName() );
-        user.setIsActive( request.getIsActive() );
-        user.setLastName( request.getLastName() );
-        user.setPassword( request.getPassword() );
-        user.setPhoneNumber( request.getPhoneNumber() );
+        if ( request.getPassword() != null ) {
+            user.setPassword( request.getPassword() );
+        }
+        if ( request.getFirstName() != null ) {
+            user.setFirstName( request.getFirstName() );
+        }
+        if ( request.getLastName() != null ) {
+            user.setLastName( request.getLastName() );
+        }
+        if ( request.getPhoneNumber() != null ) {
+            user.setPhoneNumber( request.getPhoneNumber() );
+        }
+        if ( request.getEmail() != null ) {
+            user.setEmail( request.getEmail() );
+        }
+        if ( request.getDob() != null ) {
+            user.setDob( request.getDob() );
+        }
+        if ( request.getIsActive() != null ) {
+            user.setIsActive( request.getIsActive() );
+        }
     }
 }
