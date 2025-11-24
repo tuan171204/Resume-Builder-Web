@@ -13,16 +13,21 @@ import { PostDetail } from './components/forum/PostDetail';
 import { ConnectionsPage } from './components/forum/ConnectionsPage';
 import { ExportHistory } from './components/export/ExportHistory';
 import { Toaster } from './components/ui/sonner';
+import { isAuthenticated as checkAuthStatus } from './services/authenticationService';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(checkAuthStatus());
+
+  const handleLogin = () => {
+    setIsAuthenticated(checkAuthStatus());
+  }
 
   return (
     <Router>
       <Toaster />
       <Routes>
         {/* Auth Routes */}
-        <Route path="/login" element={<LoginPage onLogin={() => setIsAuthenticated(true)} />} />
+        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected Routes */}

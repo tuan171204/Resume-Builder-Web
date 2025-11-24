@@ -86,9 +86,9 @@ public class UserService {
 
     public UserResponse getMyInfo(){
         var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-
-        User user = userRepository.findByUsername(name).orElseThrow(
+        String userId = context.getAuthentication().getName();
+//        log.info("UserId from jwt: {}", userId);
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("User not found !")
         );
 

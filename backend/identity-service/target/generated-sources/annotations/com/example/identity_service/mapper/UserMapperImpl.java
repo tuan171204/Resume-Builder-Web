@@ -61,12 +61,26 @@ public class UserMapperImpl implements UserMapper {
             return;
         }
 
-        user.setPassword( request.getPassword() );
-        user.setFirstName( request.getFirstName() );
-        user.setLastName( request.getLastName() );
-        user.setPhoneNumber( request.getPhoneNumber() );
-        user.setEmail( request.getEmail() );
-        user.setDob( request.getDob() );
-        user.setIsActive( request.getIsActive() );
+        if ( request.getPassword() != null ) {
+            user.setPassword( request.getPassword() );
+        }
+        if ( request.getFirstName() != null ) {
+            user.setFirstName( request.getFirstName() );
+        }
+        if ( request.getLastName() != null ) {
+            user.setLastName( request.getLastName() );
+        }
+        if ( request.getPhoneNumber() != null ) {
+            user.setPhoneNumber( request.getPhoneNumber() );
+        }
+        if ( request.getEmail() != null ) {
+            user.setEmail( request.getEmail() );
+        }
+        if ( request.getDob() != null ) {
+            user.setDob( request.getDob() );
+        }
+        if ( request.getIsActive() != null ) {
+            user.setIsActive( request.getIsActive() );
+        }
     }
 }

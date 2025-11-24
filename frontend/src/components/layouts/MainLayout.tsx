@@ -10,10 +10,16 @@ import {
 } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import { useEffect, useState } from 'react';
+import { getMyInfo } from '../../services/userService';
+import { toast } from 'sonner';
+import { logOut } from '../../services/authenticationService';
 
 export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [username, setUsername] = useState('');
   const notificationCount = 3;
 
   const isActive = (path: string) => location.pathname.startsWith(path);
@@ -21,6 +27,26 @@ export function MainLayout() {
   const handleLogout = () => {
     navigate('/login');
   };
+
+  const fetchUserInfo = async () => {
+    try {
+      const response = await getMyInfo();
+      const user = response.data?.result;
+
+      if (user) {
+        setUserInfo(user);
+        setUsername(user.username || user.email || 'User');
+      }
+
+    } catch (error) {
+      toast.error("Lỗi tải hồ sơ. Vui lòng đăng nhập lại.");
+      // logOut();
+    }
+  }
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -114,7 +140,9 @@ export function MainLayout() {
                     <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
                     <AvatarFallback>JD</AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline text-sm">John Doe</span>
+                  <span className="hidden md:inline text-sm">
+                    {username}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

@@ -55,6 +55,7 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token  = request.getToken();
+//        log.info("Token: {}", token);
         boolean isValid = true;
 
         try {
@@ -135,13 +136,12 @@ public class AuthenticationService {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername()) // đại diện cho user đăng nhập
+                .subject(user.getId()) // đại diện cho user đăng nhập
                 .issuer("tuanthai.com") // xác định token issue từ ai ( thường là chính trang web )
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli() //thời gian hết hạn của token
                 ))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("customClaim", "Custom")
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject()); // Payload chứa claimSet, lưu dạng Json Object
