@@ -6,4 +6,5 @@ export const API = {
   LOGIN: "/identity/auth/token",
   REGISTER: "/identity/users/registration",
   MY_INFO: "/identity/users/myInfo",
+  GENERATE_RESUME: "/resume/api/cvs/generate"
 };

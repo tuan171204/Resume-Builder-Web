@@ -27,3 +27,20 @@ export const updateMyInfo = async (request: any) => {
     },
   });
 };
+
+export const getUserProfile = async () => {
+  const token = getToken();
+  if (!token) throw new Error("Token not found");
+
+  // Giải mã token để lấy userId (tương tự như trong updateMyInfo)
+  const decodedToken: any = jwtDecode(token);
+  const userId = decodedToken.sub; // Lấy userId từ claim 'sub'
+
+  // Gọi API lấy thông tin chi tiết user
+  // Lưu ý: Nếu httpClient đã cấu hình baseURL khác port 8888, bạn cần truyền full URL
+  return await httpClient.get(`/profile/users/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

@@ -32,8 +32,8 @@ export function TemplateSelection() {
 
   const [activeTab, setActiveTab] = useState('all');
 
-  const filteredTemplates = activeTab === 'all' 
-    ? templates 
+  const filteredTemplates = activeTab === 'all'
+    ? templates
     : templates.filter(t => t.category === activeTab);
 
   const handleUseTemplate = (templateId: string) => {
@@ -60,11 +60,10 @@ export function TemplateSelection() {
         <TabsContent value={activeTab} className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTemplates.map((template) => (
-              <Card 
+              <Card
                 key={template.id}
-                className={`rounded-xl shadow-sm border-gray-200 hover:shadow-md transition-all cursor-pointer ${
-                  selectedTemplate === template.id ? 'ring-2 ring-[#6366F1]' : ''
-                }`}
+                className={`rounded-xl shadow-sm border-gray-200 hover:shadow-md transition-all cursor-pointer ${selectedTemplate === template.id ? 'ring-2 ring-[#6366F1]' : ''
+                  }`}
                 onClick={() => setSelectedTemplate(template.id)}
               >
                 <CardHeader className="pb-3">
@@ -73,8 +72,8 @@ export function TemplateSelection() {
                       <CardTitle className="text-lg mb-1">{template.name}</CardTitle>
                       <div className="flex gap-2 flex-wrap">
                         <Badge variant="outline" className="capitalize text-xs">
-                          {template.category === 'modern' ? 'Hiện đại' : 
-                           template.category === 'minimalist' ? 'Tối giản' : 'Chuyên nghiệp'}
+                          {template.category === 'modern' ? 'Hiện đại' :
+                            template.category === 'minimalist' ? 'Tối giản' : 'Chuyên nghiệp'}
                         </Badge>
                         {template.popular && (
                           <Badge className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-xs">
@@ -92,7 +91,7 @@ export function TemplateSelection() {
                 </CardHeader>
                 <CardContent>
                   {/* Template Preview */}
-                  <div 
+                  <div
                     className="w-full aspect-[8.5/11] rounded-lg mb-4 p-4"
                     style={{ backgroundColor: template.preview }}
                   >

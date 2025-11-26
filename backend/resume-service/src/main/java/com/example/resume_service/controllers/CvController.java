@@ -1,9 +1,15 @@
 package com.example.resume_service.controllers;
 
+import com.example.resume_service.mapper.CvMapper;
 import com.example.resume_service.models.Resume;
+import com.example.resume_service.services.CvService;
 import com.example.resume_service.services.ICvService;
-import com.example.resume_service.dtos.GenerateResumeRequest;
-import com.example.resume_service.dtos.GenerateResumeResponse;
+import com.example.resume_service.dtos.request.GenerateResumeRequest;
+import com.example.resume_service.dtos.response.GenerateResumeResponse;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -17,45 +23,31 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cvs")
-@CrossOrigin(origins = "*")
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CvController {
-    
-    private static final Logger logger = LoggerFactory.getLogger(CvController.class);
-    private final ICvService cvService;
 
-    public CvController(ICvService cvService) {
-        this.cvService = cvService;
-    }
+    CvService cvService;
+    CvMapper cvMapper;
 
     /**
      * Generate a new resume by analyzing user profile against job description
      */
     @PostMapping("/generate")
-    public CompletableFuture<ResponseEntity<Object>> generateResume(@RequestBody GenerateResumeRequest request) {
+    public ResponseEntity<GenerateResumeResponse> generateResume(@RequestBody GenerateResumeRequest request) {
+        log.info("Generate request: {}", request.toString());
         if (request.getUserId() == null || request.getUserId().isEmpty() ||
             request.getJobDescription() == null || request.getJobDescription().isEmpty()) {
             Map<String, String> error = new HashMap<>();
             error.put("message", "UserId and JobDescription are required");
-            return CompletableFuture.completedFuture(ResponseEntity.badRequest().body((Object)error));
+            return ResponseEntity.badRequest().body((GenerateResumeResponse) error);
         }
 
-        return cvService.generateResumeAsync(request)
-            .thenApply(result -> {
-                if (result == null) {
-                    Map<String, String> error = new HashMap<>();
-                    error.put("message", "Failed to generate resume");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((Object) error);
-                }
-                // Convert Resume model to GenerateResumeResponse DTO (clean response)
-                GenerateResumeResponse response = convertResumeToResponse(result);
-                return ResponseEntity.ok((Object) response);
-            })
-            .exceptionally(ex -> {
-                logger.error("Error in GenerateResume: {}", ex.getMessage());
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "An error occurred while generating resume");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((Object) error);
-            });
+        GenerateResumeResponse generateResumeResponse = cvService.generateResume(request);
+
+        // Convert Resume model to GenerateResumeResponse DTO (clean response)
+        return ResponseEntity.ok(generateResumeResponse);
     }
 
     /**
@@ -90,19 +82,8 @@ public class CvController {
      * Convert Resume model to GenerateResumeResponse DTO (clean response with only selected items)
      */
     private GenerateResumeResponse convertResumeToResponse(Resume resume) {
-        return new GenerateResumeResponse(
-            resume.getId(),
-            resume.getUserId(),
-            resume.getFullName(),
-            resume.getEmail(),
-            resume.getHeadline(),
-            resume.getJobDescription(),
-            resume.getMatchScore(),
-            resume.getSelectedExperiences(),
-            resume.getSelectedSkills(),
-            resume.getSelectedEducations(),
-            resume.getCreatedAt(),
-            resume.getUpdatedAt()
-        );
+        return cvMapper.convertResumeToResponse(resume);
     }
+
+
 }

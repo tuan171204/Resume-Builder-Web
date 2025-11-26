@@ -1,7 +1,7 @@
 package com.example.resume_service.services;
 
 import com.example.resume_service.models.Resume;
-import com.example.resume_service.dtos.GenerateResumeRequest;
+import com.example.resume_service.dtos.request.GenerateResumeRequest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 

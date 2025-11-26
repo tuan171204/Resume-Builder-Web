@@ -1,171 +1,201 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Download, Edit, Share2 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
 import { Separator } from '../ui/separator';
-import { toast } from 'sonner';
+import { Mail, Phone, MapPin, Linkedin, Globe } from 'lucide-react';
 
-export function CVPreview() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+export interface PreviewData {
+  fullName: string;
+  email: string;
+  phone?: string;
+  headline: string;
+  skills: string[];
+  languages: string[];
+  experiences: Array<{
+    id: string;
+    position: string;
+    company: string;
+    duration: string;
+    description: string;
+  }>;
+  projects: Array<{
+    id: string;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    technologies?: string[];
+  }>;
+  educations: Array<{
+    id: string;
+    schoolName: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: string;
+    endDate: string;
+    description?: string;
+  }>;
+}
 
-  const handleExport = () => {
-    toast.success('Exporting CV to PDF...');
-  };
+interface CVPreviewProps {
+  data: PreviewData;
+}
 
-  const handleShare = () => {
-    toast.success('Share link copied to clipboard');
-  };
+export function CVPreview({ data }: CVPreviewProps) {
+  // Destructuring dữ liệu
+  const {
+    fullName, email, phone, headline,
+    experiences, projects, educations, skills, languages
+  } = data;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="gap-2 w-fit"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
+    <div className="bg-white text-gray-800 h-full min-h-[29.7cm] shadow-2xl p-10 md:p-14 font-sans leading-relaxed">
+      {/* 1. HEADER INFO */}
+      <div className="text-center mb-6">
+        <h1 className="text-4xl md:text-5xl font-bold text-[#1E293B] mb-3 uppercase tracking-tight">
+          {fullName || 'Tên Ứng Viên'}
+        </h1>
+        {/* Nếu response có jobDescription hoặc vị trí mong muốn, có thể thêm vào đây. Tạm thời để trống hoặc lấy từ headline ngắn gọn */}
 
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/cv/edit/${id}`)}
-            className="gap-2"
-          >
-            <Edit className="w-4 h-4" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleShare}
-            className="gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
-          <Button
-            onClick={handleExport}
-            className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Export PDF
-          </Button>
+        <div className="flex flex-wrap justify-center gap-4 text-lg text-gray-600 mt-4">
+          {email && (
+            <div className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-[#6366F1]" />
+              <span>{email}</span>
+            </div>
+          )}
+          {phone && (
+            <div className="flex items-center gap-2">
+              <span>•</span>
+              <Phone className="w-5 h-5 text-[#6366F1]" />
+              <span>{phone}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span>•</span>
+            <MapPin className="w-5 h-5 text-[#6366F1]" />
+            <span>Vietnam</span>
+          </div>
         </div>
       </div>
 
-      {/* CV Preview */}
-      <div className="flex justify-center">
-        <Card className="w-full max-w-[8.5in] rounded-xl shadow-lg border-gray-200 bg-white">
-          <CardContent className="p-12">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-4xl text-[#1E293B] mb-2">John Doe</h1>
-              <p className="text-lg text-gray-600 mb-4">Senior Software Developer</p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-                <span>john.doe@example.com</span>
-                <span>•</span>
-                <span>+1 (555) 123-4567</span>
-                <span>•</span>
-                <span>linkedin.com/in/johndoe</span>
+      {/* 2. SUMMARY / HEADLINE */}
+      {headline && (
+        <div className="mb-6">
+          {/* <h2 className="text-2xl font-bold text-[#6366F1] mb-4 uppercase tracking-wide border-b-2 border-[#6366F1]/20 pb-2 inline-block">
+            Tóm tắt chuyên môn
+          </h2> */}
+          <p className="text-3xl font-bold leading-loose text-gray-700 text-center">
+            {headline}
+          </p>
+        </div>
+      )}
+
+      {/* 3. EXPERIENCE */}
+      {experiences.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-[#6366F1] mb-6 uppercase tracking-wide border-b-2 border-[#6366F1]/20 pb-2 inline-block">
+            Kinh nghiệm làm việc
+          </h2>
+          <div className="space-y-8">
+            {experiences.map((exp, idx) => (
+              <div key={idx}>
+                <div className="flex justify-between items-baseline mb-2">
+                  <h3 className="text-xl font-bold text-[#1E293B]">{exp.position}</h3>
+                  <span className="text-base font-medium text-gray-500 whitespace-nowrap bg-gray-100 px-4 py-1 rounded-full">
+                    {exp.duration}
+                  </span>
+                </div>
+                <p className="text-lg font-bold text-[#6366F1] mb-3">{exp.company}</p>
+                <div className="text-lg text-gray-700 leading-relaxed whitespace-pre-line pl-4 border-l-4 border-gray-200">
+                  {exp.description}
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-            <Separator className="my-6" />
+      {/* 4. PROJECTS */}
+      {projects.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-[#6366F1] mb-6 uppercase tracking-wide border-b-2 border-[#6366F1]/20 pb-2 inline-block">
+            Dự án nổi bật
+          </h2>
+          <div className="grid grid-cols-1 gap-6">
+            {projects.map((proj, idx) => (
+              <div key={idx} className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-[#1E293B]">{proj.name}</h3>
+                  <span className="text-sm text-gray-500 italic">
+                    {proj.startDate} - {proj.endDate}
+                  </span>
+                </div>
+                <p className="text-lg text-gray-700 mb-4">{proj.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {proj.technologies?.map((tech, i) => (
+                    <span key={i} className="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-semibold">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-            {/* Professional Summary */}
-            <div className="mb-6">
-              <h2 className="text-xl text-[#6366F1] mb-3 uppercase tracking-wide">
-                Professional Summary
-              </h2>
-              <p className="text-gray-700 leading-relaxed">
-                Experienced software developer with 5+ years of expertise in full-stack development. 
-                Proven track record of delivering high-quality solutions using React, Node.js, and cloud technologies. 
-                Strong problem-solving abilities and a passion for continuous learning and innovation.
+      {/* 5. EDUCATION */}
+      {educations.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold text-[#6366F1] mb-5 uppercase tracking-wide border-b-2 border-[#6366F1]/20 pb-2 inline-block">
+            Học vấn
+          </h2>
+          {educations.map((edu, idx) => (
+            <div key={idx} className="flex flex-col md:flex-row justify-between mb-6 pb-4 border-b border-dashed border-gray-200 last:border-0">
+              <div>
+                <h3 className="text-xl font-bold text-[#1E293B]">{edu.schoolName}</h3>
+                <p className="text-lg text-gray-700 mt-1">
+                  <span className="font-semibold">{edu.degree}</span> - {edu.fieldOfStudy}
+                </p>
+                {edu.description && <p className="text-gray-500 mt-1 italic">{edu.description}</p>}
+              </div>
+              <p className="text-lg text-gray-500 font-medium whitespace-nowrap mt-2 md:mt-0">
+                {edu.startDate} - {edu.endDate}
               </p>
             </div>
+          ))}
+        </div>
+      )}
 
-            <Separator className="my-6" />
-
-            {/* Work Experience */}
-            <div className="mb-6">
-              <h2 className="text-xl text-[#6366F1] mb-4 uppercase tracking-wide">
-                Work Experience
-              </h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="text-lg text-[#1E293B]">Senior Developer</h3>
-                      <p className="text-gray-600">Tech Corp</p>
-                    </div>
-                    <p className="text-sm text-gray-500">Jan 2022 - Present</p>
-                  </div>
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Led development of scalable web applications using React and Node.js</li>
-                    <li>Improved application performance by 40% through optimization techniques</li>
-                    <li>Mentored junior developers and conducted code reviews</li>
-                    <li>Collaborated with cross-functional teams to deliver projects on time</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="text-lg text-[#1E293B]">Full Stack Developer</h3>
-                      <p className="text-gray-600">Digital Solutions Inc</p>
-                    </div>
-                    <p className="text-sm text-gray-500">Jun 2019 - Dec 2021</p>
-                  </div>
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Developed and maintained multiple client projects using modern frameworks</li>
-                    <li>Implemented RESTful APIs and database solutions</li>
-                    <li>Participated in agile development processes and sprint planning</li>
-                  </ul>
-                </div>
-              </div>
+      {/* 6. SKILLS & LANGUAGES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        {skills.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-[#6366F1] mb-4 uppercase tracking-wide border-b-2 border-[#6366F1]/20 pb-2 inline-block">
+              Kỹ năng
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {skills.map((skill, idx) => (
+                <span key={idx} className="px-4 py-2 bg-[#6366F1]/10 text-[#6366F1] font-bold rounded-lg text-base">
+                  {skill}
+                </span>
+              ))}
             </div>
+          </div>
+        )}
 
-            <Separator className="my-6" />
-
-            {/* Education */}
-            <div className="mb-6">
-              <h2 className="text-xl text-[#6366F1] mb-4 uppercase tracking-wide">
-                Education
-              </h2>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg text-[#1E293B]">Bachelor of Science in Computer Science</h3>
-                  <p className="text-gray-600">University of Technology</p>
-                </div>
-                <p className="text-sm text-gray-500">2015 - 2019</p>
-              </div>
+        {languages.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-[#6366F1] mb-4 uppercase tracking-wide border-b-2 border-[#6366F1]/20 pb-2 inline-block">
+              Ngôn ngữ
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {languages.map((lang, idx) => (
+                <span key={idx} className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg text-base border border-gray-200">
+                  {lang}
+                </span>
+              ))}
             </div>
-
-            <Separator className="my-6" />
-
-            {/* Skills */}
-            <div>
-              <h2 className="text-xl text-[#6366F1] mb-3 uppercase tracking-wide">
-                Skills
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'SQL', 'MongoDB', 'AWS', 'Docker', 'Git', 'Agile', 'Leadership'].map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
       </div>
     </div>
   );
