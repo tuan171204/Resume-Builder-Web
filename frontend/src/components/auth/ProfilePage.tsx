@@ -254,7 +254,7 @@ export function ProfilePage() {
             <CardDescription>Tổng số CV</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl text-[#6366F1]">8</p>
+            {/* <p className="text-3xl text-[#6366F1]">8</p> */}
           </CardContent>
         </Card>
 
@@ -263,7 +263,7 @@ export function ProfilePage() {
             <CardDescription>Bài viết diễn đàn</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl text-[#8B5CF6]">24</p>
+            {/* <p className="text-3xl text-[#8B5CF6]">24</p> */}
           </CardContent>
         </Card>
 
@@ -272,7 +272,7 @@ export function ProfilePage() {
             <CardDescription>Kết nối</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl text-[#6366F1]">142</p>
+            {/* <p className="text-3xl text-[#6366F1]">142</p> */}
           </CardContent>
         </Card>
       </div>
@@ -284,7 +284,7 @@ export function ProfilePage() {
           <CardDescription>Các hành động mới nhất của bạn trên ResumeForge</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <div className="flex items-start gap-4">
               <div className="w-2 h-2 rounded-full bg-[#6366F1] mt-2" />
               <div className="flex-1">
@@ -322,7 +322,7 @@ export function ProfilePage() {
                 <p className="text-xs text-gray-500 mt-1">3 ngày trước</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

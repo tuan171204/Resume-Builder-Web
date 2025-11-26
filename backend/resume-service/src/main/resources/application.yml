@@ -1,28 +1,28 @@
 server:
   port: 8083
+  servlet:
+    context-path: /resume
 
 spring:
   application:
     name: resume-service
   data:
     mongodb:
-      uri: mongodb://localhost:27017/resumedb
-      database: resumedb
-
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      uri: mongodb://root:root@localhost:27017/resume-service?authSource=admin
 
 # Cấu hình OpenRouter
 openrouter:
   api-url: https://openrouter.ai/api/v1/chat/completions
   # Key của bạn (đã điền sẵn)
-  api-key: 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
+  api-key: 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
   # Model miễn phí bạn chọn
-  model: google/gemini-2.0-flash-exp:free
+  model: x-ai/grok-4.1-fast:free
 
 logging:
   level:
     root: INFO
     com.example.resume_service: DEBUG
+
+app:
+  services:
+    profile: http://localhost:8082/profile

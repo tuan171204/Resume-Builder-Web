@@ -1,346 +1,430 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Eye, FileUp, Sparkles, Plus, GripVertical, Trash2 } from 'lucide-react';
+import {
+  Save, FileUp, Sparkles, Briefcase, GraduationCap, FolderGit,
+  Languages, User, Eye, EyeOff, MonitorPlay, X, Lightbulb
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
-import { AIAssistant } from '../ai/AIAssistant';
 import { toast } from 'sonner';
+import { useReactToPrint } from 'react-to-print';
 
-interface Section {
+// --- Services (Giả định path file service của bạn) ---
+import { generateResume } from '../../services/resumeService';
+import { getMyInfo, getUserProfile } from '../../services/userService';
+
+// --- Types ---
+import type { PreviewData } from './CVPreview';
+import { CVPreview } from './CVPreview';
+import { ExperienceSection } from '../cv-sections/ExperienceSection';
+import { ProjectSection } from '../cv-sections/ProjectSection';
+import { EducationSection } from '../cv-sections/EducationSection';
+import { LanguageSection } from '../cv-sections/LanguageSection';
+import type { Experience, Project, Education, Language } from '../../types/resume';
+import { v4 as uuidv4 } from 'uuid';
+
+interface OriginalExperience {
   id: string;
-  type: 'summary' | 'experience' | 'education' | 'skills' | 'projects';
-  title: string;
-  content: any;
+  companyName: string;
+  position: string;
+  startDate: string;
+  endDate: string | null;
+  description: string;
 }
+
+interface OriginalUserProfile {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  experiences: OriginalExperience[];
+  // Các trường khác nếu cần...
+}
+
+interface AIResponse {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  headline: string;
+  matchScore: number;
+  selectedSkills: string[];
+  suggestedSkills: string[];
+  languages: string[];
+  // AI chỉ trả về ID và Description mới
+  selectedExperiences: Array<{
+    originalExperienceId: string;
+    overriddenDescription: string;
+    displayOrder: number;
+  }>;
+  // Project & Education AI trả về full (theo mẫu JSON bạn đưa)
+  selectedProjects: Array<{
+    id: string;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    technologies: string[];
+  }>;
+  selectedEducations: Array<{
+    id: string;
+    schoolName: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+  }>;
+}
+
 
 export function CVEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [cvTitle, setCvTitle] = useState(id ? 'CV Lập trình viên Senior' : 'CV Chưa đặt tên');
-  const [selectedSection, setSelectedSection] = useState<string>('summary');
-  const [showAI, setShowAI] = useState(false);
-  const [aiContext, setAIContext] = useState('');
-  
-  const [sections] = useState<Section[]>([
-    { id: 'summary', type: 'summary', title: 'Tóm tắt chuyên môn', content: {} },
-    { id: 'experience', type: 'experience', title: 'Kinh nghiệm làm việc', content: {} },
-    { id: 'education', type: 'education', title: 'Học vấn', content: {} },
-    { id: 'skills', type: 'skills', title: 'Kỹ năng', content: {} },
-    { id: 'projects', type: 'projects', title: 'Dự án', content: {} }
-  ]);
 
-  const [summary, setSummary] = useState('');
-  const [experiences, setExperiences] = useState([
-    {
-      id: '1',
-      company: 'Tech Corp',
-      position: 'Lập trình viên Senior',
-      duration: 'Tháng 1/2022 - Hiện tại',
-      description: 'Dẫn dắt phát triển các ứng dụng web có khả năng mở rộng sử dụng React và Node.js'
+  // --- STATE DỮ LIỆU GỐC ---
+  const [originalProfile, setOriginalProfile] = useState<OriginalUserProfile | null>(null);
+
+
+  // --- STATE DỮ LIỆU EDITING ---
+  const [cvTitle, setCvTitle] = useState(id ? 'CV Ứng tuyển' : 'CV Mới');
+  const [jobDescription, setJobDescription] = useState('');
+  const [matchScore, setMatchScore] = useState<number | null>(null);
+
+  // Các trường dữ liệu CV (Flat state để dễ edit)
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [headline, setHeadline] = useState('');
+
+  // Dữ liệu mảng (Mapped)
+  const [skills, setSkills] = useState<string[]>([]);
+  const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
+
+  // --- CẬP NHẬT STATE TYPES ---
+  // Sử dụng đúng Type mới định nghĩa
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [educations, setEducations] = useState<Education[]>([]);
+  // Lưu ý: Languages nên đổi thành array object để lưu cả level
+  const [languages, setLanguages] = useState<Language[]>([]);
+
+  // State UI
+  const [selectedSection, setSelectedSection] = useState<string>('jd');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showPreviewMobile, setShowPreviewMobile] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    // Dùng 'content' thay vì 'contentRef' để tương thích tốt hơn với các phiên bản
+    contentRef: printRef,
+    documentTitle: `CV_${fullName || 'Candidate'}`,
+    // Thiết lập CSS in ấn trực tiếp tại đây để tránh xung đột bên ngoài
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+        }
+        /* Đảm bảo nội dung luôn hiển thị */
+        html, body {
+          height: 100%;
+          overflow: visible !important;
+        }
+      }
+    `,
+    onAfterPrint: () => toast.success("Đã xuất file PDF thành công!"),
+  });
+
+  const sections = [
+    { id: 'jd', title: 'JD & AI Phân Tích', icon: Sparkles },
+    { id: 'summary', title: 'Tiêu đề & Tóm tắt', icon: User },
+    { id: 'experience', title: 'Kinh nghiệm', icon: Briefcase },
+    { id: 'projects', title: 'Dự án', icon: FolderGit },
+    { id: 'education', title: 'Học vấn', icon: GraduationCap },
+    { id: 'skills', title: 'Kỹ năng', icon: MonitorPlay },
+    { id: 'languages', title: 'Ngôn ngữ', icon: Languages },
+  ];
+
+  // 1. Lấy thông tin User Profile gốc khi load
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const profileRes = await getUserProfile();
+        const profileData = profileRes.data as OriginalUserProfile; // Ép kiểu về OriginalUserProfile
+
+        setOriginalProfile(profileData);
+
+        // Điền thông tin cơ bản mặc định
+        setFullName(`${profileData.firstName} ${profileData.lastName}`);
+        setEmail(profileData.email);
+        setPhone(profileData.phoneNumber);
+      }
+      catch (e) {
+        console.error(e);
+        toast.error("Không thể lấy dữ liệu người dùng");
+      }
     }
-  ]);
+    fetchUser();
+  }, []);
 
-  const handleSave = () => {
-    toast.success('Đã lưu CV thành công');
-  };
+  // 2. Xử lý AI Generate
+  const handleGenerateAI = async () => {
+    if (!jobDescription.trim()) return toast.error('Vui lòng nhập JD');
+    if (!originalProfile) return toast.error('Dữ liệu gốc chưa tải xong, vui lòng đợi...');
 
-  const handlePublish = () => {
-    toast.success('Đã xuất bản CV thành công');
-  };
+    setIsGenerating(true);
+    try {
+      const rawResponse = await generateResume({
+        userId: originalProfile.userId, // Hoặc originalProfile.id tùy cấu trúc
+        jobDescription: jobDescription
+      });
 
-  const handlePreview = () => {
-    navigate(`/cv/preview/${id || 'new'}`);
-  };
+      const response = rawResponse as unknown as AIResponse;
 
-  const handleAIGenerate = (sectionType: string) => {
-    setAIContext(sectionType);
-    setShowAI(true);
-  };
+      // 1. Map thông tin chung
+      setMatchScore(response.matchScore);
+      setFullName(response.fullName || fullName);
+      setHeadline(response.headline);
+      setSkills(response.selectedSkills || []);
+      setSuggestedSkills(response.suggestedSkills || []);
+      setLanguages((response.languages || []).map(lang => ({
+        id: uuidv4(), // Tạo ID tạm vì string mảng không có ID
+        language: lang,
+        level: '' // AI JSON hiện tại chưa trả về level, để trống hoặc mặc định
+      })));
 
-  const handleAIAccept = (generatedText: string) => {
-    if (aiContext === 'summary') {
-      setSummary(generatedText);
+      // 2. Map EXPERIENCE (Cần merge với Original vì AI chỉ trả về ID + Description mới)
+      if (response.selectedExperiences && originalProfile.experiences) {
+        const mappedExps = response.selectedExperiences.map((aiExp) => {
+          // Tìm experience gốc để lấy các thông tin AI không trả về (Company, Date...)
+          const origin = originalProfile.experiences.find(
+            (e) => e.id === aiExp.originalExperienceId
+          );
+
+          if (!origin) return null;
+
+          return {
+            id: origin.id,
+            position: origin.position,
+            companyName: origin.companyName,
+            startDate: origin.startDate,
+            endDate: origin.endDate || '',
+            // Ưu tiên dùng mô tả đã được AI viết lại, nếu không có thì dùng gốc
+            description: aiExp.overriddenDescription || origin.description
+          };
+        }).filter(Boolean) as Experience[];
+
+        setExperiences(mappedExps);
+      }
+
+      // 3. Map PROJECTS (Lấy trực tiếp từ AI Response)
+      if (response.selectedProjects) {
+        const mappedProjects = response.selectedProjects.map(p => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          technologies: p.technologies || []
+        }));
+        setProjects(mappedProjects);
+      }
+
+      // 4. Map EDUCATION (Lấy trực tiếp từ AI Response)
+      if (response.selectedEducations) {
+        const mappedEducations = response.selectedEducations.map(e => ({
+          id: e.id,
+          schoolName: e.schoolName,
+          degree: e.degree,
+          fieldOfStudy: e.fieldOfStudy,
+          startDate: e.startDate,
+          endDate: e.endDate,
+          description: e.description || ''
+        }));
+        setEducations(mappedEducations);
+      }
+
+      toast.success(`Đã tối ưu CV! Độ phù hợp: ${response.matchScore}%`);
+      setSelectedSection('summary');
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi khi tạo CV. Vui lòng thử lại.");
+    } finally {
+      setIsGenerating(false);
     }
-    setShowAI(false);
-    toast.success('Đã áp dụng nội dung AI');
   };
 
-  const addExperience = () => {
-    setExperiences([...experiences, {
-      id: Date.now().toString(),
-      company: '',
-      position: '',
-      duration: '',
-      description: ''
-    }]);
+  // Chuẩn bị dữ liệu cho Preview Component
+  const previewData: PreviewData = {
+    fullName, email, phone, headline, skills,
+    // Map languages object về string để hiển thị đơn giản (hoặc sửa CVPreview để hiện level đẹp hơn)
+    languages: languages.map(l => `${l.language} - ${l.level}`),
+
+    experiences: experiences.map(e => ({
+      ...e,
+      company: e.companyName, // Mapping lại tên trường nếu CVPreview dùng 'company'
+      duration: `${e.startDate} - ${e.endDate || 'Hiện tại'}`
+    })),
+
+    projects: projects.map(p => ({ ...p })), // Project structure gần như giống nhau
+
+    educations: educations.map(e => ({ ...e }))
   };
 
-  const removeExperience = (id: string) => {
-    setExperiences(experiences.filter(exp => exp.id !== id));
-  };
+  const handleSave = () => toast.success('Đã lưu bản nháp');
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex-1">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-gray-50/50">
+      {/* HEADER */}
+      <div className="h-16 border-b bg-white px-6 flex items-center justify-between shrink-0 sticky top-0 z-20 shadow-sm">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <X className="w-5 h-5 text-gray-500" />
+          </Button>
           <Input
             value={cvTitle}
             onChange={(e) => setCvTitle(e.target.value)}
-            className="text-2xl h-auto py-2 border-0 px-0 focus-visible:ring-0 text-[#1E293B]"
-            placeholder="Tiêu đề CV"
+            className="font-bold border-none shadow-none w-[200px]"
           />
-          <p className="text-gray-600 mt-1">Đã lưu 2 phút trước</p>
+          {matchScore !== null && (
+            <Badge className={matchScore >= 80 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>
+              Match: {matchScore}%
+            </Badge>
+          )}
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={handleSave} className="gap-2">
-            <Save className="w-4 h-4" />
-            Lưu nháp
+
+        <div className="flex gap-2">
+          <Button variant="outline" className="md:hidden" onClick={() => setShowPreviewMobile(!showPreviewMobile)}>
+            {showPreviewMobile ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </Button>
-          <Button variant="outline" onClick={handlePreview} className="gap-2">
-            <Eye className="w-4 h-4" />
-            Xem trước
-          </Button>
-          <Button onClick={handlePublish} className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] gap-2">
-            <FileUp className="w-4 h-4" />
-            Xuất bản
+          <Button
+            onClick={() => handlePrint()}
+            className="bg-[#6366F1] hover:bg-[#5558DD] gap-2"
+          >
+            <FileUp className="w-4 h-4" /> Xuất PDF
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Sidebar - Sections */}
-        <div className="lg:col-span-3">
-          <Card className="rounded-xl shadow-sm border-gray-200 sticky top-24">
-            <CardHeader>
-              <CardTitle className="text-lg">Các phần</CardTitle>
-              <CardDescription>Nhấp để chỉnh sửa từng phần</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setSelectedSection(section.id)}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-2 ${
-                    selectedSection === section.id
-                      ? 'bg-gradient-to-r from-[#6366F1]/10 to-[#8B5CF6]/10 text-[#6366F1]'
-                      : 'hover:bg-gray-50 text-gray-700'
-                  }`}
-                >
-                  <GripVertical className="w-4 h-4" />
-                  {section.title}
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* LEFT EDITOR */}
+        <div className={`flex-1 flex flex-col md:w-[45%] md:max-w-[600px] border-r bg-white ${showPreviewMobile ? 'hidden md:flex' : 'flex'}`}>
 
-        {/* Right Editor Panel */}
-        <div className="lg:col-span-9 space-y-6">
-          {/* Professional Summary */}
-          {selectedSection === 'summary' && (
-            <Card className="rounded-xl shadow-sm border-gray-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Tóm tắt chuyên môn</CardTitle>
-                    <CardDescription>Tổng quan ngắn gọn về nền tảng chuyên môn của bạn</CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAIGenerate('summary')}
-                    className="gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Tạo bằng AI
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
+          {/* Navigation Tabs */}
+          <div className="flex p-2 overflow-x-auto border-b no-scrollbar bg-gray-50 sticky top-0">
+            {sections.map(sec => (
+              <button
+                key={sec.id}
+                onClick={() => setSelectedSection(sec.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${selectedSection === sec.id ? 'bg-white text-[#6366F1] shadow ring-1 ring-[#6366F1]/20' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <sec.icon className="w-4 h-4" /> {sec.title}
+              </button>
+            ))}
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+            {/* JD SECTION */}
+            {selectedSection === 'jd' && (
+              <div className="space-y-4">
+                <Card className="bg-indigo-50 border-indigo-100">
+                  <CardContent className="p-4 text-indigo-800 text-sm">
+                    Dán mô tả công việc (JD) vào đây để AI phân tích và chọn lọc kinh nghiệm phù hợp nhất từ hồ sơ của bạn.
+                  </CardContent>
+                </Card>
                 <Textarea
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Viết tóm tắt ngắn gọn về kinh nghiệm và mục tiêu nghề nghiệp của bạn..."
-                  className="min-h-[150px]"
+                  placeholder="Paste Job Description here..."
+                  className="min-h-[200px]"
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
                 />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Work Experience */}
-          {selectedSection === 'experience' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl text-[#1E293B]">Kinh nghiệm làm việc</h2>
-                  <p className="text-sm text-gray-600">Thêm lịch sử công việc của bạn</p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={addExperience}
-                  className="gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Thêm kinh nghiệm
+                <Button onClick={handleGenerateAI} disabled={isGenerating} className="w-full h-12 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]">
+                  {isGenerating ? 'Đang phân tích...' : '✨ Tối ưu hóa CV'}
                 </Button>
               </div>
+            )}
 
-              {experiences.map((exp, index) => (
-                <Card key={exp.id} className="rounded-xl shadow-sm border-gray-200">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <Badge variant="outline">Kinh nghiệm {index + 1}</Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeExperience(exp.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Công ty</Label>
-                        <Input
-                          value={exp.company}
-                          onChange={(e) => {
-                            const updated = experiences.map(e =>
-                              e.id === exp.id ? { ...e, company: e.target.value } : e
-                            );
-                            setExperiences(updated);
-                          }}
-                          placeholder="Tên công ty"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Vị trí</Label>
-                        <Input
-                          value={exp.position}
-                          placeholder="Chức danh công việc"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Thời gian</Label>
-                      <Input
-                        value={exp.duration}
-                        placeholder="Tháng 1/2022 - Hiện tại"
-                      />
-                    </div>
+            {/* SUMMARY SECTION */}
+            {selectedSection === 'summary' && (
+              <div className="space-y-4">
+                <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Họ tên" />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
+                  <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Số điện thoại" />
+                </div>
+                <label className="text-sm font-bold block mt-2">Headline (Tóm tắt)</label>
+                <Textarea value={headline} onChange={e => setHeadline(e.target.value)} className="min-h-[150px]" />
+              </div>
+            )}
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Mô tả</Label>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleAIGenerate('experience')}
-                          className="gap-2 text-[#6366F1] hover:text-[#6366F1]"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          Tạo bằng AI
-                        </Button>
-                      </div>
-                      <Textarea
-                        value={exp.description}
-                        placeholder="Mô tả trách nhiệm và thành tích của bạn..."
-                        className="min-h-[100px]"
-                      />
+            {selectedSection === 'experience' && (
+              <ExperienceSection data={experiences} onChange={setExperiences} />
+            )}
+
+            {selectedSection === 'projects' && (
+              <ProjectSection data={projects} onChange={setProjects} />
+            )}
+
+            {selectedSection === 'education' && (
+              <EducationSection data={educations} onChange={setEducations} />
+            )}
+
+            {selectedSection === 'languages' && (
+              <LanguageSection data={languages} onChange={setLanguages} />
+            )}
+            {/* SKILLS SECTION */}
+            {selectedSection === 'skills' && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader><CardTitle className="text-sm">Kỹ năng đã chọn</CardTitle></CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={skills.join(', ')}
+                      onChange={e => setSkills(e.target.value.split(',').map(s => s.trim()))}
+                    />
+                    <div className="flex gap-2 flex-wrap mt-2">
+                      {skills.map((s, i) => <Badge key={i} className="bg-green-100 text-green-800">{s}</Badge>)}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                {suggestedSkills.length > 0 && (
+                  <Card className="border-yellow-200 bg-yellow-50">
+                    <CardHeader><CardTitle className="text-sm text-yellow-800">Gợi ý từ JD</CardTitle></CardHeader>
+                    <CardContent className="flex gap-2 flex-wrap">
+                      {suggestedSkills.map((s, i) => <Badge key={i} variant="outline" className="bg-white">{s}</Badge>)}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT PREVIEW */}
+        <div className={`flex-1 bg-gray-200/90 overflow-y-auto p-8 justify-center items-start ${showPreviewMobile ? 'flex fixed inset-0 z-50 pt-20' : 'hidden md:flex'}`}>
+          {/* LƯU Ý: 
+              1. Gắn ref={printRef} vào thẻ div bao ngoài CVPreview 
+              2. Bỏ các class transform/scale ở div này để khi in nó Full Size chuẩn A4
+              3. Style transform chỉ nên áp dụng cho việc "nhìn trên màn hình"
+           */}
+          <div className="w-full max-w-[210mm] min-h-[297mm]">
+            <div ref={printRef}>
+              <CVPreview data={previewData} />
             </div>
-          )}
-
-          {/* Education */}
-          {selectedSection === 'education' && (
-            <Card className="rounded-xl shadow-sm border-gray-200">
-              <CardHeader>
-                <CardTitle>Học vấn</CardTitle>
-                <CardDescription>Thêm nền tảng giáo dục của bạn</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Bằng cấp</Label>
-                  <Input placeholder="Cử nhân Khoa học Máy tính" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Trường</Label>
-                  <Input placeholder="Tên trường đại học" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Năm</Label>
-                  <Input placeholder="2018 - 2022" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Skills */}
-          {selectedSection === 'skills' && (
-            <Card className="rounded-xl shadow-sm border-gray-200">
-              <CardHeader>
-                <CardTitle>Kỹ năng</CardTitle>
-                <CardDescription>Liệt kê kỹ năng kỹ thuật và mềm của bạn</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Kỹ năng kỹ thuật</Label>
-                  <Input placeholder="JavaScript, React, Node.js, Python..." />
-                </div>
-                <div className="space-y-2">
-                  <Label>Kỹ năng mềm</Label>
-                  <Input placeholder="Lãnh đạo, Giao tiếp, Giải quyết vấn đề..." />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Projects */}
-          {selectedSection === 'projects' && (
-            <Card className="rounded-xl shadow-sm border-gray-200">
-              <CardHeader>
-                <CardTitle>Dự án</CardTitle>
-                <CardDescription>Trình bày các dự án đáng chú ý của bạn</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Tên dự án</Label>
-                  <Input placeholder="Nền tảng Thương mại điện tử" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Mô tả</Label>
-                  <Textarea placeholder="Mô tả dự án, vai trò của bạn và công nghệ sử dụng..." />
-                </div>
-                <div className="space-y-2">
-                  <Label>Liên kết</Label>
-                  <Input placeholder="https://github.com/username/project" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          </div>
         </div>
       </div>
-
-      {/* AI Assistant Modal */}
-      {showAI && (
-        <AIAssistant
-          context={aiContext}
-          onAccept={handleAIAccept}
-          onClose={() => setShowAI(false)}
-        />
-      )}
     </div>
   );
 }
