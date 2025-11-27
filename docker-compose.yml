@@ -104,8 +104,14 @@ services:
       - user-service
       - mongodb-db
     networks: [ micro-net ]
+    # payment-service:
+    #   build: ./backend/payment-service
+    #   container_name: payment-service
+    #   ports: [ "8080:8080" ]
+    #   environment:
 
-  # 6. API Gateway (Port 8888)
+
+    # 6. API Gateway (Port 8888)
   api-gateway:
     build: ./backend/api-gateway
     container_name: api-gateway

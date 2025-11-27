@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -44,6 +45,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 //        log.info("\nEnter authentication filter....");
 
+        String targetPath = exchange.getRequest().getURI().getRawPath();
+        log.info("➡ Forward path inside route: {}", targetPath);
+
+
         if (isPublicEndpoint(exchange.getRequest())){
             log.info("Call public endpoints");
             return chain.filter(exchange);
@@ -53,6 +58,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         List<String> authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION);
         if (CollectionUtils.isEmpty(authHeader)){
             try {
+                log.info("Thiếu headers authorization");
                 return unauthenticated(exchange.getResponse());
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
@@ -60,7 +66,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         String token = authHeader.get(0).replace("Bearer", "");
-//        log.info("Token: {}", token);
+        log.info("Token: {}", token);
 
         // Verify token
         // Delegate tới identity-service
@@ -73,6 +79,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 return chain.filter(exchange);
             else {
                 try {
+                    log.info("Token không hiệu lực");
                     return unauthenticated(exchange.getResponse());
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
@@ -80,6 +87,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             }
         }).onErrorResume(throwable -> {
             try {
+                log.error("Lỗi xác thực Token: ", throwable);
                 return unauthenticated((exchange.getResponse()));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
@@ -100,7 +108,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     Mono<Void> unauthenticated(ServerHttpResponse response) throws JsonProcessingException {;
         ApiResponse<?> apiResponse = ApiResponse.builder()
                 .code(1401)
-                .message("Unauthenticated")
+                .message(response.toString())
                 .build();
 
         String body = objectMapper.writeValueAsString(apiResponse);

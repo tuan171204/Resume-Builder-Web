@@ -72,6 +72,7 @@ export function ProfilePage() {
         password
       };
 
+      console.log("Update info: ", updateRequest);
       await updateMyInfo(updateRequest);
       toast.success("Cập nhật hồ sơ thành công!");
       setIsEditOpen(false);

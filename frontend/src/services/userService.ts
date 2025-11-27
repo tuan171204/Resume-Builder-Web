@@ -21,7 +21,7 @@ export const updateMyInfo = async (request: any) => {
   const decodedToken = jwtDecode(token);
   const userId = decodedToken.sub;
 
-  return await httpClient.put(`/identity/users/${userId}`, request, {
+  return await httpClient.put(`/profile/users/${userId}`, request, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },

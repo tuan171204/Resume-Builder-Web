@@ -14,7 +14,7 @@ spring:
 # Cấu hình AI
 openrouter:
   api-url: ${OPENROUTER_URL:https://openrouter.ai/api/v1/chat/completions}
-  api-key: ${OPENROUTER_API_KEY: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}
+  api-key: ${OPENROUTER_API_KEY}
   model: ${OPENROUTER_MODEL:x-ai/grok-4.1-fast-free} # Đã đổi thành biến môi trường
 
 logging:

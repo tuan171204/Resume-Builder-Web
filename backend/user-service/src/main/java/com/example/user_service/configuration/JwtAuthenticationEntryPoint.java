@@ -20,7 +20,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         ApiResponse<?> apiResponse = ApiResponse.builder()
                 .code(1401)
-                .message("Unauthorized")
+                .message("User Unauthorized")
                 .build();
 
         ObjectMapper objectMapper = new ObjectMapper();

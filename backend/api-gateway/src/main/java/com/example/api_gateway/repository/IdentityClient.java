@@ -10,6 +10,6 @@ import reactor.core.publisher.Mono;
 
 public interface IdentityClient {
     // http-client của spring
-    @PostExchange(url = "/auth/introspect", contentType = MediaType.APPLICATION_JSON_VALUE)
+    @PostExchange(url = "identity/auth/introspect", contentType = MediaType.APPLICATION_JSON_VALUE)
     Mono<ApiResponse<IntrospectResponse>> introspect(@RequestBody IntrospectRequest request);
 }
