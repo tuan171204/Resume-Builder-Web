@@ -1,0 +1,20 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: payment-service
+
+# PayOS Configuration - Read from environment variables
+payos:
+  client-id: ${PAYOS_CLIENT_ID:}
+  api-key: ${PAYOS_API_KEY:}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:}
+  endpoint: ${PAYOS_ENDPOINT:https://api-merchant.payos.vn/v2/payment-requests}
+
+logging:
+  level:
+    root: INFO
+    com.example.paymentservice: DEBUG

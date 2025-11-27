@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    comments = "version: 1.6.3, compiler: javac, environment: Java 22.0.2 (Oracle Corporation)"
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.8 (Eclipse Adoptium)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -51,6 +51,7 @@ public class UserMapperImpl implements UserMapper {
         userResponse.createdAt( user.getCreatedAt() );
         userResponse.updatedAt( user.getUpdatedAt() );
         userResponse.isActive( user.getIsActive() );
+        userResponse.accountType( user.getAccountType() );
 
         return userResponse.build();
     }

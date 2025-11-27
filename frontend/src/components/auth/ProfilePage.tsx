@@ -178,8 +178,8 @@ export function ProfilePage() {
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
                 <h1 className="text-2xl text-[#1E293B]">{userDisplay.firstName}  {userDisplay.lastName}</h1>
-                <Badge className="w-fit mx-auto md:mx-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]">
-                  Thành viên phổ thông
+                <Badge className="w-fit mx-auto md:mx-0" style={{ background: userDisplay.accountType === 'PRO' ? 'linear-gradient(90deg,#f59e0b,#ef4444)' : undefined }}>
+                  {userDisplay.accountType === 'PRO' ? 'Thành viên PRO' : 'Thành viên phổ thông'}
                 </Badge>
               </div>
 

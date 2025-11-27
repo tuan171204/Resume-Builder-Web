@@ -11,15 +11,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { useEffect, useState } from 'react';
+import httpClient from '../../configurations/httpClient';
 import { getMyInfo } from '../../services/userService';
 import { toast } from 'sonner';
 import { logOut } from '../../services/authenticationService';
+import { getToken } from '../../services/localStorageService';
 
 export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [username, setUsername] = useState('');
+  const [showUpgradePanel, setShowUpgradePanel] = useState(false);
+  const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
+  const [upgradeResult, setUpgradeResult] = useState<any>(null);
+  const [orderCode, setOrderCode] = useState<number | null>(null);
+  const [paymentPaid, setPaymentPaid] = useState(false);
   const notificationCount = 3;
 
   const isActive = (path: string) => location.pathname.startsWith(path);
@@ -38,15 +45,24 @@ export function MainLayout() {
         setUsername(user.username || user.email || 'User');
       }
 
+      return user;
+
     } catch (error) {
       toast.error("Lỗi tải hồ sơ. Vui lòng đăng nhập lại.");
       // logOut();
+      return null;
     }
   }
 
   useEffect(() => {
     fetchUserInfo();
   }, [])
+
+  useEffect(() => {
+    if (userInfo?.accountType === 'PRO') {
+      setShowUpgradePanel(false);
+    }
+  }, [userInfo])
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -94,6 +110,102 @@ export function MainLayout() {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
+            {/* Upgrade to Pro button (left of notifications) */}
+            {userInfo?.accountType !== 'PRO' && (
+            <div className="relative">
+              <Button variant="ghost" size="icon" className="relative" onClick={() => setShowUpgradePanel(v => !v)}>
+                {/* Use a simple crown icon? Fallback to User icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25l1.8-3.6L17.4 8.25 21 6l-2.4 4.2L21 15l-4.2-1.8L12 19l-4.8-5.8L3 15l2.4-4.8L3 6l3.6 2.25L12 8.25z" />
+                </svg>
+              </Button>
+
+              {showUpgradePanel && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow p-3">
+                  <div className="font-medium mb-2">Nâng cấp tài khoản lên PRO</div>
+                  <div className="text-sm text-gray-600 mb-2">Thanh toán: 2.000 VNĐ — Nội dung: nâng cấp tài khoản Pro</div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={async () => {
+                        setIsUpgradeLoading(true);
+                        setUpgradeResult(null);
+                        setPaymentPaid(false);
+                        try {
+                          const payload = { amount: 2000, description: 'nâng cấp tài khoản Pro' };
+                          const res = await httpClient.post('/api/payments/create', payload);
+                          setUpgradeResult(res.data);
+                          // Lưu orderCode từ response
+                          const code = res.data?.data?.data?.orderCode;
+                          if (code) setOrderCode(code);
+                          toast.success('Tạo yêu cầu thanh toán thành công');
+                        } catch (err) {
+                          toast.error('Tạo yêu cầu thất bại. Kiểm tra console');
+                          console.error(err);
+                        } finally {
+                          setIsUpgradeLoading(false);
+                        }
+                      }}
+                      disabled={isUpgradeLoading}
+                    >
+                      {isUpgradeLoading ? 'Đang tạo...' : 'Tạo giao dịch'}
+                    </Button>
+                    {orderCode && (
+                      <Button variant="outline" onClick={async () => {
+                        try {
+                          const res = await httpClient.get(`/api/payments/check/${orderCode}`);
+                          const status = res.data?.data?.data?.status;
+                          if (status === 'PAID') {
+                            setPaymentPaid(true);
+                            toast.success('Đã thanh toán thành công! Nhấn nút Nâng cấp ngay.');
+                          } else {
+                            toast('Chưa thanh toán. Trạng thái: ' + (status || 'PENDING'));
+                          }
+                        } catch (err) {
+                          toast.error('Kiểm tra thất bại');
+                          console.error(err);
+                        }
+                      }}>Kiểm tra trạng thái</Button>
+                    )}
+                  </div>
+
+                  {upgradeResult && (
+                    <div className="mt-3">
+                      {upgradeResult?.data?.data?.checkoutUrl && (
+                        <div className="mt-2 flex gap-2">
+                          <a href={upgradeResult.data.data.checkoutUrl} target="_blank" rel="noreferrer" className="px-3 py-2 bg-[#6366F1] text-white rounded text-sm">Mở checkout</a>
+                          <button className="px-3 py-2 border rounded text-sm" onClick={() => navigator.clipboard?.writeText(upgradeResult.data.data.checkoutUrl)}>Sao chép</button>
+                        </div>
+                      )}
+                      {upgradeResult?.data?.data?.qrCode && (
+                        <div className="mt-3 flex flex-col items-center gap-3">
+                          <img src={upgradeResult.data.data.qrCode.startsWith('data:') || upgradeResult.data.data.qrCode.startsWith('http') ? upgradeResult.data.data.qrCode : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upgradeResult.data.data.qrCode)}`} alt="qr" className="w-48 h-48 object-contain bg-white p-2 rounded border" />
+                          {paymentPaid && (
+                            <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={async () => {
+                              try {
+                                await httpClient.post('/identity/users/myInfo/upgrade', {}, {
+                                  headers: {
+                                    Authorization: `Bearer ${getToken()}`,
+                                  }
+                                });
+                                toast.success('Nâng cấp thành công!');
+                                await fetchUserInfo();
+                                setShowUpgradePanel(false);
+                                setPaymentPaid(false);
+                                setOrderCode(null);
+                              } catch (err) {
+                                toast.error('Nâng cấp thất bại');
+                                console.error(err);
+                              }
+                            }}>Nâng cấp ngay</Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            )}
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

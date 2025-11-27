@@ -21,4 +21,5 @@ public class UserResponse {
     LocalDate createdAt;
     LocalDate updatedAt;
     Boolean isActive;
+    String accountType;
 }
