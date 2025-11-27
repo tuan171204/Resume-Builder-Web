@@ -94,4 +94,19 @@ public class UserService {
 
         return userMapper.toUserResponse(user);
     }
+
+    public UserResponse upgradeMyAccount(){
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new RuntimeException("User not found !")
+        );
+
+        user.setAccountType("PRO");
+        user = userRepository.save(user);
+
+        return userMapper.toUserResponse(user);
+    }
+    
 }

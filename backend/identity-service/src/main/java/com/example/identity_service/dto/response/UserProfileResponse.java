@@ -21,4 +21,5 @@ public class UserProfileResponse {
     Boolean isActive;
     LocalDate createdAt;
     LocalDate updatedAt;
+    String accountType;
 }

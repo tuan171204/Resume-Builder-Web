@@ -23,6 +23,7 @@ public class User {
     private LocalDate createdAt;
     private LocalDate updatedAt;
     private Boolean isActive = true;
+    private String accountType = "REGULAR"; // REGULAR or PRO
 
     @PrePersist
     protected void onCreate() {
@@ -36,6 +37,9 @@ public class User {
 
         if (isActive == null){
             isActive = true;
+        }
+        if (accountType == null) {
+            accountType = "REGULAR";
         }
     }
 }

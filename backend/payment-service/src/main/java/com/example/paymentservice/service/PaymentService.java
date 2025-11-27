@@ -83,4 +83,33 @@ public class PaymentService {
             throw new RuntimeException("Failed to create payment link: " + e.getMessage(), e);
         }
     }
+
+    public String checkPaymentStatus(long orderCode) {
+        try {
+            // GET /v2/payment-requests/{orderCode}
+            String endpoint = payosConfig.getEndpoint() + "/" + orderCode;
+            URL url = new URL(endpoint);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("x-client-id", payosConfig.getClientId());
+            conn.setRequestProperty("x-api-key", payosConfig.getApiKey());
+
+            int responseCode = conn.getResponseCode();
+            log.info("PayOS check status response code: {}", responseCode);
+
+            if (responseCode >= 200 && responseCode < 300) {
+                String response = new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                log.info("PayOS check status success: {}", response);
+                return response;
+            } else {
+                String errorResponse = new String(conn.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+                log.error("PayOS check status error: {}", errorResponse);
+                throw new RuntimeException("PayOS API error: " + errorResponse);
+            }
+
+        } catch (Exception e) {
+            log.error("Error checking payment status", e);
+            throw new RuntimeException("Failed to check payment status: " + e.getMessage(), e);
+        }
+    }
 }

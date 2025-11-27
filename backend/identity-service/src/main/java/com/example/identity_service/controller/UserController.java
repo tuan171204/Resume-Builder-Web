@@ -64,4 +64,11 @@ public class UserController {
                 .result(userService.getMyInfo())
                 .build();
     }
+
+    @PostMapping("/myInfo/upgrade")
+    ApiResponse<UserResponse> upgradeMyAccount(){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.upgradeMyAccount())
+                .build();
+    }
 }
