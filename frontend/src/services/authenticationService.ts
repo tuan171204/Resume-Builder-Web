@@ -23,7 +23,10 @@ export const registerUser = async (username: string, password: string, email: st
   return response;
 };
 
-export const logOut = () => {
+export const logOut = async () => {
+  await httpClient.post(API.LOGOUT, {
+    token: getToken()
+  });
   removeToken();
 };
 

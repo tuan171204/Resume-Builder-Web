@@ -20,7 +20,6 @@ import { getToken } from '../../services/localStorageService';
 export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
   const [username, setUsername] = useState('');
   const [showUpgradePanel, setShowUpgradePanel] = useState(false);
   const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
@@ -32,6 +31,7 @@ export function MainLayout() {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   const handleLogout = () => {
+    logOut();
     navigate('/login');
   };
 
@@ -41,7 +41,6 @@ export function MainLayout() {
       const user = response.data?.result;
 
       if (user) {
-        setUserInfo(user);
         setUsername(user.username || user.email || 'User');
       }
 
@@ -88,7 +87,7 @@ export function MainLayout() {
                 Trang chủ
               </Button>
             </Link>
-            <Link to="/forum">
+            {/* <Link to="/forum">
               <Button
                 variant={isActive('/forum') ? 'secondary' : 'ghost'}
                 className="gap-2"
@@ -96,7 +95,7 @@ export function MainLayout() {
                 <MessageSquare className="w-4 h-4" />
                 Diễn đàn
               </Button>
-            </Link>
+            </Link> */}
             <Link to="/templates">
               <Button
                 variant={isActive('/templates') ? 'secondary' : 'ghost'}

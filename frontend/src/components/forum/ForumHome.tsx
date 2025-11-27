@@ -32,7 +32,7 @@ export function ForumHome() {
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostTags, setNewPostTags] = useState('');
-  const [useAI, setUseAI] = useState(false);
+  // const [useAI, setUseAI] = useState(false);
 
   const [posts] = useState<Post[]>([
     {
@@ -93,7 +93,7 @@ export function ForumHome() {
     setNewPostTitle('');
     setNewPostContent('');
     setNewPostTags('');
-    setUseAI(false);
+    // setUseAI(false);
   };
 
   const handleGenerateSummary = () => {
@@ -137,7 +137,7 @@ export function ForumHome() {
                   placeholder="What's your post about?"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="post-content">Content</Label>
                 <Textarea

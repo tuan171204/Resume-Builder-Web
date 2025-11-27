@@ -112,10 +112,10 @@ export function ExportHistory() {
     toast.success(`Retrying export for ${job.cvName}...`);
   };
 
-  const handleCancel = (job: ExportJob) => {
-    toast.success('Export cancelled');
-    setSelectedJob(null);
-  };
+  // const handleCancel = (job: ExportJob) => {
+  //   toast.success('Export cancelled');
+  //   setSelectedJob(null);
+  // };
 
   const handleViewDetails = (job: ExportJob) => {
     setSelectedJob(job);
@@ -289,12 +289,12 @@ export function ExportHistory() {
                 <p className="text-sm text-gray-600">CV Name</p>
                 <p className="text-[#1E293B]">{selectedJob.cvName}</p>
               </div>
-              
+
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">Status</p>
                 <div>{getStatusBadge(selectedJob.status)}</div>
               </div>
-              
+
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">Created At</p>
                 <p className="text-[#1E293B]">{selectedJob.createdAt}</p>
@@ -326,7 +326,7 @@ export function ExportHistory() {
               {selectedJob.status === 'processing' && (
                 <Button
                   variant="outline"
-                  onClick={() => handleCancel(selectedJob)}
+                  // onClick={() => handleCancel(selectedJob)}
                   className="w-full"
                 >
                   Cancel Export

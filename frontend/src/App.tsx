@@ -7,7 +7,7 @@ import { ProfilePage } from './components/auth/ProfilePage';
 import { CVDashboard } from './components/resume/CVDashboard';
 import { CVEditor } from './components/resume/CVEditor';
 import { TemplateSelection } from './components/resume/TemplateSelection';
-import { CVPreview } from './components/resume/CVPreview';
+// import { CVPreview } from './components/resume/CVPreview';
 import { ForumHome } from './components/forum/ForumHome';
 import { PostDetail } from './components/forum/PostDetail';
 import { ConnectionsPage } from './components/forum/ConnectionsPage';
@@ -37,7 +37,6 @@ export default function App() {
             <Route path="/dashboard" element={<CVDashboard />} />
             <Route path="/cv/new" element={<CVEditor />} />
             <Route path="/cv/edit/:id" element={<CVEditor />} />
-            <Route path="/cv/preview/:id" element={<CVPreview />} />
             <Route path="/templates" element={<TemplateSelection />} />
             <Route path="/forum" element={<ForumHome />} />
             <Route path="/forum/post/:id" element={<PostDetail />} />

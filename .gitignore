@@ -1,0 +1,8 @@
+.env
+**/.env
+backend/**/target/
+frontend/dist/
+frontend/node_modules/
+.DS_Store
+.idea/
+.vscode/
