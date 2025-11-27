@@ -13,7 +13,7 @@ import { Badge } from '../ui/badge';
 import { useEffect, useState } from 'react';
 import { getMyInfo } from '../../services/userService';
 import { toast } from 'sonner';
-// import { logOut } from '../../services/authenticationService';
+import { logOut } from '../../services/authenticationService';
 
 export function MainLayout() {
   const location = useLocation();
@@ -24,6 +24,7 @@ export function MainLayout() {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   const handleLogout = () => {
+    logOut();
     navigate('/login');
   };
 
