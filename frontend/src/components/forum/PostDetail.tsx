@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageSquare, Send, ThumbsUp } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -22,7 +22,7 @@ interface Comment {
 }
 
 export function PostDetail() {
-  const { id } = useParams();
+  // const { id } = useParams();
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -97,13 +97,13 @@ What are your experiences with technical interviews? What would you add to this 
     }
   };
 
-  const handleAddReply = (commentId: string) => {
-    if (replyContent.trim()) {
-      toast.success('Reply added!');
-      setReplyContent('');
-      setReplyTo(null);
-    }
-  };
+  // const handleAddReply = (commentId: string) => {
+  //   if (replyContent.trim()) {
+  //     toast.success('Reply added!');
+  //     setReplyContent('');
+  //     setReplyTo(null);
+  //   }
+  // };
 
   const handleLike = () => {
     toast.success('Post liked!');
@@ -137,7 +137,7 @@ What are your experiences with technical interviews? What would you add to this 
           </div>
 
           <CardTitle className="text-2xl text-[#1E293B] mb-3">{post.title}</CardTitle>
-          
+
           <div className="flex gap-2 mb-4">
             {post.tags.map((tag) => (
               <Badge key={tag} variant="secondary">
@@ -242,7 +242,7 @@ What are your experiences with technical interviews? What would you add to this 
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            onClick={() => handleAddReply(comment.id)}
+                            // onClick={() => handleAddReply(comment.id)}
                             className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]"
                           >
                             Reply

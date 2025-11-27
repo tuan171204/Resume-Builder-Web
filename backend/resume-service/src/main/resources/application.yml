@@ -8,15 +8,14 @@ spring:
     name: resume-service
   data:
     mongodb:
-      uri: mongodb://root:root@localhost:27017/resume-service?authSource=admin
+      # THAY THẾ localhost:27017 bằng mongodbb:27017 (tên service DB trong Docker Compose)
+      uri: mongodb://${MONGO_USER:root}:${MONGO_PASS:root}@${MONGO_HOST:localhost}:${MONGO_PORT:27017}/${MONGO_DB_NAME:resume-service}?authSource=admin
 
-# Cấu hình OpenRouter
+# Cấu hình AI
 openrouter:
-  api-url: https://openrouter.ai/api/v1/chat/completions
-  # Key của bạn (đã điền sẵn)
-  api-key: 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
-  # Model miễn phí bạn chọn
-  model: x-ai/grok-4.1-fast:free
+  api-url: ${OPENROUTER_URL:https://openrouter.ai/api/v1/chat/completions}
+  api-key: ${OPENROUTER_API_KEY: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}
+  model: ${OPENROUTER_MODEL:x-ai/grok-4.1-fast-free} # Đã đổi thành biến môi trường
 
 logging:
   level:
@@ -25,4 +24,5 @@ logging:
 
 app:
   services:
-    profile: http://localhost:8082/profile
+    # Resume gọi User Service, dùng biến môi trường
+    profile: ${USER_SERVICE_URL:http://localhost:8082/profile}

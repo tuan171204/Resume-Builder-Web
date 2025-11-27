@@ -1,0 +1,16 @@
+Ignore file .env (Bảo mật tuyệt đối)
+
+.env
+**/.env
+
+Ignore thư mục build/target
+
+backend/**/target/
+frontend/dist/
+frontend/node_modules/
+
+Ignore file hệ thống
+
+.DS_Store
+.idea/
+.vscode/

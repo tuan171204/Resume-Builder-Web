@@ -1,5 +1,4 @@
-import { Separator } from '../ui/separator';
-import { Mail, Phone, MapPin, Linkedin, Globe } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 export interface PreviewData {
   fullName: string;

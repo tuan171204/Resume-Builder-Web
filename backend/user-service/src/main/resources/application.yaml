@@ -6,8 +6,8 @@ spring:
   application:
     name: user-service
   neo4j:
-    uri: bolt://localhost:7687
+    # THAY THẾ localhost:7687 bằng neo4jdb:7687 (tên service DB trong Docker Compose)
+    uri: bolt://${NEO4J_HOST:localhost}:${NEO4J_PORT:7687}
     authentication:
-      username: neo4j
-      password: 12345678
-
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:12345678} # Lưu ý: Nên dùng biến môi trường thay vì password cứng

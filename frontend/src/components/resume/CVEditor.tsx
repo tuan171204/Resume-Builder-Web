@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Save, FileUp, Sparkles, Briefcase, GraduationCap, FolderGit,
-  Languages, User, Eye, EyeOff, MonitorPlay, X, Lightbulb
+  FileUp, Sparkles, Briefcase, GraduationCap, FolderGit,
+  Languages, User, Eye, EyeOff, MonitorPlay, X
 } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
@@ -14,7 +14,7 @@ import { useReactToPrint } from 'react-to-print';
 
 // --- Services (Giả định path file service của bạn) ---
 import { generateResume } from '../../services/resumeService';
-import { getMyInfo, getUserProfile } from '../../services/userService';
+import { getUserProfile } from '../../services/userService';
 
 // --- Types ---
 import type { PreviewData } from './CVPreview';
@@ -280,7 +280,7 @@ export function CVEditor() {
     educations: educations.map(e => ({ ...e }))
   };
 
-  const handleSave = () => toast.success('Đã lưu bản nháp');
+  // const handleSave = () => toast.success('Đã lưu bản nháp');
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col bg-gray-50/50">

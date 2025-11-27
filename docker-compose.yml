@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # INFRASTRUCTURE (DATABASES & CACHE)
+  # ----------------------------------------------------
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysqldb
+    environment:
+      # Cấu hình phải khớp với application.yml của Identity Service
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: identity_service # Tên DB Identity
+    ports:
+      - "3308:3306" # Mặc dù Identity dùng port 3307 local, ta dùng port 3306 chuẩn
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: [ micro-net ]
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+
+  mongodb-db:
+    image: mongo:6.0
+    container_name: mongodbb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks: [ micro-net ]
+
+  neo4j-db:
+    image: neo4j:5.15.0
+    container_name: neo4jdb
+    environment:
+      # Cấu hình phải khớp với application.yaml của User Service
+      NEO4J_AUTH: neo4j/12345678
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    networks: [ micro-net ]
+
+  # ----------------------------------------------------
+  # BACKEND SERVICES
+  # ----------------------------------------------------
+
+  # 1. Identity Service (Port 8081, dùng MySQL)
+  identity-service:
+    build: ./backend/identity-service
+    container_name: identity-service
+    ports: [ "8081:8081" ]
+    environment:
+      # Ghi đè các giá trị localhost thành tên service trong Docker Compose
+      DB_HOST: mysql-db
+      DB_PORT: 3306 #
+      DB_NAME: identity_service
+      DB_USERNAME: root
+      DB_PASSWORD: rootpassword
+      USER_SERVICE_URL: http://user-service:8082/profile
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks: [ micro-net ]
+
+  # 2. User Service (Port 8082, dùng Neo4j)
+  user-service:
+    build: ./backend/user-service
+    container_name: user-service
+    ports: [ "8082:8082" ]
+    environment:
+      NEO4J_HOST: neo4j-db
+      NEO4J_PORT: 7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: 12345678
+    depends_on:
+      - neo4j-db
+    networks: [ micro-net ]
+
+  # 3. Resume Service (Port 8083, dùng MongoDB)
+  resume-service:
+    build: ./backend/resume-service
+    container_name: resume-service
+    ports: [ "8083:8083" ]
+    environment:
+      # MongoDB Config
+      MONGO_HOST: mongodbb
+      MONGO_USER: root
+      MONGO_PASS: root
+      MONGO_DB_NAME: resume-service
+      MONGO_PORT: 27017
+      # User Service URL (Internal call)
+      USER_SERVICE_URL: http://user-service:8082/profile
+      # AI Config
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY} # Lấy từ .env
+      OPENROUTER_MODEL: x-ai/grok-4.1-fast:free
+      OPENROUTER_URL: https://openrouter.ai/api/v1/chat/completions
+    depends_on:
+      - user-service
+      - mongodb-db
+    networks: [ micro-net ]
+
+  # 6. API Gateway (Port 8888)
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: api-gateway
+    ports: [ "8888:8888" ]
+    environment:
+      # Ghi đè URL các service cho Gateway
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      USER_SERVICE_URL: http://user-service:8082
+      RESUME_SERVICE_URL: http://resume-service:8083
+      NOTIFICATION_SERVICE_URL: http://notification-service:8084
+      FORUM_SERVICE_URL: http://forum-service:8085
+    depends_on:
+      - identity-service
+      - user-service
+      - resume-service
+    networks: [ micro-net ]
+
+  # 7. Frontend (Port 3000)
+  cv-frontend:
+    build: ./frontend
+    container_name: cv-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks: [ micro-net ]
+
+# Define Networks & Volumes
+networks:
+  micro-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  neo4j_data:
+  mongodb_data:

@@ -13,12 +13,11 @@ import { Badge } from '../ui/badge';
 import { useEffect, useState } from 'react';
 import { getMyInfo } from '../../services/userService';
 import { toast } from 'sonner';
-import { logOut } from '../../services/authenticationService';
+// import { logOut } from '../../services/authenticationService';
 
 export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
   const [username, setUsername] = useState('');
   const notificationCount = 3;
 
@@ -34,7 +33,6 @@ export function MainLayout() {
       const user = response.data?.result;
 
       if (user) {
-        setUserInfo(user);
         setUsername(user.username || user.email || 'User');
       }
 
@@ -72,7 +70,7 @@ export function MainLayout() {
                 Trang chủ
               </Button>
             </Link>
-            <Link to="/forum">
+            {/* <Link to="/forum">
               <Button
                 variant={isActive('/forum') ? 'secondary' : 'ghost'}
                 className="gap-2"
@@ -80,7 +78,7 @@ export function MainLayout() {
                 <MessageSquare className="w-4 h-4" />
                 Diễn đàn
               </Button>
-            </Link>
+            </Link> */}
             <Link to="/templates">
               <Button
                 variant={isActive('/templates') ? 'secondary' : 'ghost'}

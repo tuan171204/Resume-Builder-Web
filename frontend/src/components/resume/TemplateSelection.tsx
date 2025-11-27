@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { FileText, Eye, Check } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
@@ -15,7 +15,7 @@ interface Template {
 }
 
 export function TemplateSelection() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
   const templates: Template[] = [
@@ -36,9 +36,9 @@ export function TemplateSelection() {
     ? templates
     : templates.filter(t => t.category === activeTab);
 
-  const handleUseTemplate = (templateId: string) => {
-    navigate('/cv/new');
-  };
+  // const handleUseTemplate = (templateId: string) => {
+  //   navigate('/cv/new');
+  // };
 
   return (
     <div className="space-y-6">
@@ -126,7 +126,7 @@ export function TemplateSelection() {
                       className="flex-1 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] gap-2"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleUseTemplate(template.id);
+                        // handleUseTemplate(template.id);
                       }}
                     >
                       <FileText className="w-4 h-4" />

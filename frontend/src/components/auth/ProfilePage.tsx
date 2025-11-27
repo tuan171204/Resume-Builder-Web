@@ -10,7 +10,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation, useNavigate
 import { toast } from 'sonner';
-import { getMyInfo, updateMyInfo } from '../../services/userService'; // Import services
+import { getMyInfo, updateMyInfo, getUserProfile } from '../../services/userService'; // Import services
 import { logOut } from '../../services/authenticationService'; // Import logOut
 
 export function ProfilePage() {
@@ -27,14 +27,14 @@ export function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  // const [email, setEmail] = useState('');
+  // const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await getMyInfo();
-        const user = response.data.result;
+        const response = await getUserProfile();
+        const user = response.data;
         console.log(user)
         setUserInfo(user);
 
@@ -43,7 +43,7 @@ export function ProfilePage() {
         setLastName(user.lastName || '');
         setPhoneNumber(user.phoneNumber || '');
         setDob(user.dob || ''); // dob giả định là string date
-        setEmail(user.email || 'Chưa khai báo email')
+        // setEmail(user.email || 'Chưa khai báo email')
       } catch (error) {
         toast.error("Lỗi tải hồ sơ. Vui lòng đăng nhập lại.");
         logOut();
