@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, FileText, MessageSquare, LayoutTemplate, User, Home, LogOut, Download } from 'lucide-react';
+import { FileText, MessageSquare, LayoutTemplate, User, Home, LogOut, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
+// import { Badge } from '../ui/badge';
 import { useEffect, useState } from 'react';
 import httpClient from '../../configurations/httpClient';
 import { getMyInfo } from '../../services/userService';
@@ -26,7 +26,7 @@ export function MainLayout() {
   const [upgradeResult, setUpgradeResult] = useState<any>(null);
   const [orderCode, setOrderCode] = useState<number | null>(null);
   const [paymentPaid, setPaymentPaid] = useState(false);
-  const notificationCount = 3;
+  // const notificationCount = 3;
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
